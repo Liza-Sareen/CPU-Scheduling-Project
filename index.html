@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPU Scheduling Simulator</title>
+    <link rel = "stylesheet" href = "style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>CPU Scheduling Simulator</h1>
+        <!-- Process Input Section -->
+        <section>
+            <h2>Add Processes</h2>
+            <table id="processTable">
+            <thead>
+                <tr>
+                <th>Process</th>
+                <th>Arrival Time</th>
+                <th>Burst Time</th>
+                <th>Priority</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+            </table>
+
+            <button id="addProcess">Add Process</button>
+        </section>
+
+        <!-- Algorithm Selection -->
+        <section>
+            <h2>Scheduling Algorithm</h2>
+            <select id="algorithm">
+            <option value="fcfs">FCFS</option>
+            <option value="sjf">SJF</option>
+            <option value="priority">Priority</option>
+            <option value="rr">Round Robin</option>
+            </select>
+
+            <input type="number" id="quantum" placeholder="Time Quantum (RR)">
+            <button id="run">Run Simulation</button>
+        </section>
+
+        <!-- Output -->
+        <section>
+            <h2>Gantt Chart</h2>
+            <div id="gantt"></div>
+        </section>
+
+        <section>
+            <h3>Legend</h3>
+            <ul>
+                <li><b>FCFS</b>: First Come First Serve</li>
+                <li><b>SJF</b>: Shortest Job First (Non-Preemptive)</li>
+                <li><b>Priority</b>: Lower number = higher priority</li>
+                <li><b>Round Robin</b>: Time-sliced execution using quantum</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>AI Recommendation</h3>
+            <p id="aiResult" style="font-weight: bold; color: #1976d2;">
+                Run simulation to see recommendation
+            </p>
+        </section>
+
+        <section>
+            <h2>Performance Metrics</h2>
+            <table id="metrics">
+            <thead>
+                <tr>
+                <th>Process</th>
+                <th>Waiting Time</th>
+                <th>Turnaround Time</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+            </table>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
