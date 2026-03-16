@@ -3,82 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPU Scheduling Simulator</title>
-    <link rel = "stylesheet" href = "style.css">
+    <title>OS Scheduler | Interactive Visualizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Fira+Code:wght@400;500&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .code-font { font-family: 'Fira Code', monospace; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .gantt-block { transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; height: 40px; border-right: 1px solid rgba(15, 23, 42, 0.5); }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <h1>CPU Scheduling Simulator</h1>
-        <!-- Process Input Section -->
-        <section>
-            <h2>Add Processes</h2>
-            <table id="processTable">
-            <thead>
-                <tr>
-                <th>Process</th>
-                <th>Arrival Time</th>
-                <th>Burst Time</th>
-                <th>Priority</th>
+<body class="pb-20">
+
+    <nav class="p-6 border-b border-slate-800 mb-10">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2 text-xl font-bold tracking-tight">
+                <i data-lucide="cpu" class="text-blue-500"></i> <span>Algo<span class="text-blue-500">OS</span></span>
+            </div>
+            <div class="flex gap-4">
+                <span class="text-xs bg-slate-800 px-3 py-1 rounded-full text-slate-400 border border-slate-700">C++ Backend</span>
+                <span class="text-xs bg-slate-800 px-3 py-1 rounded-full text-slate-400 border border-slate-700">JS Simulation</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-6 grid lg:grid-cols-3 gap-10">
+        
+        <div class="lg:col-span-1 space-y-6">
+            <div class="glass p-6 rounded-2xl">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="settings-2" class="w-5 h-5 text-blue-400"></i> Simulation Settings
+                </h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs text-slate-400 uppercase font-bold">Algorithm</label>
+                        <select id="algoSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 text-sm outline-none focus:border-blue-500">
+                            <option value="FCFS">First Come First Served (FCFS)</option>
+                            <option value="SJF">Shortest Job First (Non-Preemptive)</option>
+                        </select>
+                    </div>
+
+                    <div id="processList" class="space-y-2">
+                        <label class="text-xs text-slate-400 uppercase font-bold">Processes (Burst Times)</label>
+                        <div class="flex gap-2">
+                            <input type="number" value="5" class="p-input w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm" placeholder="P1">
+                            <input type="number" value="3" class="p-input w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm" placeholder="P2">
+                            <input type="number" value="8" class="p-input w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm" placeholder="P3">
+                        </div>
+                    </div>
+
+                    <button onclick="runSimulation()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-blue-900/20 mt-4">
+                        Run Simulation
+                    </button>
+                </div>
+            </div>
+
+            <div class="glass p-6 rounded-2xl border-l-4 border-l-emerald-500">
+                <h3 class="text-sm font-bold text-emerald-400 uppercase mb-2">Recommendation Engine</h3>
+                <p id="recommendationText" class="text-sm text-slate-300">Run a simulation to see the optimal strategy for this workload.</p>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2 space-y-6">
+            
+            <div class="glass p-8 rounded-2xl">
+                <h2 class="text-lg font-bold mb-6 flex items-center gap-2">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5 text-purple-400"></i> Gantt Chart
+                </h2>
+                <div id="ganttContainer" class="flex w-full rounded-lg overflow-hidden border border-slate-700 bg-slate-900/50 mb-2">
+                    <div class="w-full h-10 flex items-center justify-center text-slate-600 italic text-sm">Waiting for execution...</div>
+                </div>
+                <div id="timelineLabels" class="flex justify-between text-[10px] text-slate-500 font-mono px-1">
+                    <span>0</span>
+                </div>
+            </div>
+
+            <div class="glass p-8 rounded-2xl">
+                <h2 class="text-lg font-bold mb-6 flex items-center gap-2">
+                    <i data-lucide="table" class="w-5 h-5 text-emerald-400"></i> Performance Metrics
+                </h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-700 text-slate-400">
+                                <th class="pb-3 font-medium">Process</th>
+                                <th class="pb-3 font-medium text-center">Burst Time</th>
+                                <th class="pb-3 font-medium text-center">Wait Time</th>
+                                <th class="pb-3 font-medium text-center">Turnaround</th>
+                            </tr>
+                        </thead>
+                        <tbody id="metricsTableBody">
+                            <tr><td colspan="4" class="py-10 text-center text-slate-600">No data available</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        function runSimulation() {
+            const algo = document.getElementById('algoSelect').value;
+            const inputs = document.querySelectorAll('.p-input');
+            let processes = Array.from(inputs).map((input, index) => ({
+                id: `P${index + 1}`,
+                burst: parseInt(input.value) || 0,
+                color: ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b'][index % 4]
+            }));
+
+            if (algo === 'SJF') {
+                processes.sort((a, b) => a.burst - b.burst);
+                document.getElementById('recommendationText').innerText = "SJF is optimal here as it minimizes the Average Waiting Time for this specific batch.";
+            } else {
+                document.getElementById('recommendationText').innerText = "FCFS is selected. Note: SJF might yield lower average waiting times for these values.";
+            }
+
+            renderGantt(processes);
+            renderMetrics(processes);
+        }
+
+        function renderGantt(processes) {
+            const container = document.getElementById('ganttContainer');
+            const labels = document.getElementById('timelineLabels');
+            container.innerHTML = '';
+            labels.innerHTML = '<span>0</span>';
+            
+            let currentTime = 0;
+            const totalBurst = processes.reduce((acc, p) => acc + p.burst, 0);
+
+            processes.forEach(p => {
+                const width = (p.burst / totalBurst) * 100;
+                const block = document.createElement('div');
+                block.className = 'gantt-block';
+                block.style.width = `${width}%`;
+                block.style.backgroundColor = p.color;
+                block.style.color = 'white';
+                block.innerText = p.id;
+                container.appendChild(block);
+
+                currentTime += p.burst;
+                const label = document.createElement('span');
+                label.innerText = currentTime;
+                labels.appendChild(label);
+            });
+        }
+
+        function renderMetrics(processes) {
+            const tbody = document.getElementById('metricsTableBody');
+            tbody.innerHTML = '';
+            
+            let waitTime = 0;
+            let totalWT = 0;
+            let totalTAT = 0;
+
+            processes.forEach(p => {
+                const tat = waitTime + p.burst;
+                tbody.innerHTML += `
+                    <tr class="border-b border-slate-800/50">
+                        <td class="py-4 font-bold text-blue-400">${p.id}</td>
+                        <td class="py-4 text-center">${p.burst}ms</td>
+                        <td class="py-4 text-center">${waitTime}ms</td>
+                        <td class="py-4 text-center">${tat}ms</td>
+                    </tr>
+                `;
+                totalWT += waitTime;
+                totalTAT += tat;
+                waitTime += p.burst;
+            });
+
+            const avgWT = (totalWT / processes.length).toFixed(2);
+            tbody.innerHTML += `
+                <tr class="text-white font-bold bg-blue-500/10">
+                    <td class="py-4 px-2" colspan="2">Averages:</td>
+                    <td class="py-4 text-center text-emerald-400">${avgWT}ms</td>
+                    <td class="py-4 text-center text-emerald-400">${(totalTAT / processes.length).toFixed(2)}ms</td>
                 </tr>
-            </thead>
-            <tbody></tbody>
-            </table>
-
-            <button id="addProcess">Add Process</button>
-        </section>
-
-        <!-- Algorithm Selection -->
-        <section>
-            <h2>Scheduling Algorithm</h2>
-            <select id="algorithm">
-            <option value="fcfs">FCFS</option>
-            <option value="sjf">SJF</option>
-            <option value="priority">Priority</option>
-            <option value="rr">Round Robin</option>
-            </select>
-
-            <input type="number" id="quantum" placeholder="Time Quantum (RR)">
-            <button id="run">Run Simulation</button>
-        </section>
-
-        <!-- Output -->
-        <section>
-            <h2>Gantt Chart</h2>
-            <div id="gantt"></div>
-        </section>
-
-        <section>
-            <h3>Legend</h3>
-            <ul>
-                <li><b>FCFS</b>: First Come First Serve</li>
-                <li><b>SJF</b>: Shortest Job First (Non-Preemptive)</li>
-                <li><b>Priority</b>: Lower number = higher priority</li>
-                <li><b>Round Robin</b>: Time-sliced execution using quantum</li>
-            </ul>
-        </section>
-
-        <section>
-            <h3>AI Recommendation</h3>
-            <p id="aiResult" style="font-weight: bold; color: #1976d2;">
-                Run simulation to see recommendation
-            </p>
-        </section>
-
-        <section>
-            <h2>Performance Metrics</h2>
-            <table id="metrics">
-            <thead>
-                <tr>
-                <th>Process</th>
-                <th>Waiting Time</th>
-                <th>Turnaround Time</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-            </table>
-        </section>
-    </div>
-
-    <script src="script.js"></script>
+            `;
+        }
+    </script>
 </body>
 </html>
